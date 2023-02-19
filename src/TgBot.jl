@@ -4,10 +4,9 @@ export run_tgbot
 using Telegram, Telegram.API, Telegram.JSON3
 using ConfigEnv
 using Logging, LoggingExtras
-using JSON
 
 include("Types.jl")
-using Types
+using .Types
 
 struct State
     point::String
@@ -55,6 +54,7 @@ function run_tgbot()
     dotenv()
 
     @info "Running bot..."
+    @info methods(process_update)
 
     run_bot() do msg
         @info "Incoming message:\t" chat_id=msg.message.chat.id text=rget(msg, [:message, :text])
