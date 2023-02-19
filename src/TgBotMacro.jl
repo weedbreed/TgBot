@@ -12,6 +12,7 @@ expr = Expr(:block)
 
 macro tgbot(ex)
     MacroTools.postwalk(tgbot_walk, ex)
+    create_process_update()
     @info "final ex" expr
     return expr
 end
@@ -27,36 +28,40 @@ mutable struct Case
     Case() = new(nothing, nothing, false, false, nothing, nothing)
 end
 
+function create_type(T, v)
+    isnothing(v) ? :($T) : :($T{Symbol($v)})
+end
+
 function create_process_update()
     global case
     @info "case" case
     isnothing(case) && return nothing
     push!(expr.args, :(function Main.TgBot.process_update(
-            state_pointT::StatePoint{$(isnothing(case.state_point) ? :nothing : String(case.state_point))}
-        #     buttonT::$(isnothing(case.button) ? :Button : :Button{:$(case.button)}),
-        #     ::Text{$(case.text)},
-        #     ::Image{$(case.image)},
-        #     callback_actionT::CallbackAction{:$(case.callback_action)}
-        #     ; chat_id, callback_variables, text, image
-        )
+        state_pointT::$(create_type(StatePoint, case.state_point)),
+        buttonT::$(create_type(Button, case.button)),
+        ::Letter{$(case.text)},
+        ::Image{$(case.image)},
+        callback_actionT::$(create_type(CallbackAction, case.callback_action))
+        ; chat_id, callback_variables, text, image
+    )
 
         println("HERE!!!")
-        #     takeP = x -> String(collect(typeof(x).parameters)[1])
+            takeP = x -> String(collect(typeof(x).parameters)[1])
 
-        #     state_point = takeP(state_pointT)
-        #     button = takeP(buttonT)
+            state_point = takeP(state_pointT)
+            button = takeP(buttonT)
 
-        #     @info "Calling function $(case.func) with arguments:" chat_id=chat_id state_point=state_point button=button text=text image=image callback_action=callback_action callback_variables=callback_variables
+            @info "Calling function $(case.func) with arguments:" chat_id=chat_id state_point=state_point button=button text=text image=image callback_action=callback_action callback_variables=callback_variables
 
-            # $(case.func)(
-            #     chat_id = chat_id,
-            #     state_point = state_point,
-            #     button = button,
-            #     text = text,
-            #     image = image,
-            #     callback_action = callback_action,
-            #     callback_variables = callback_variables
-            # )
+            $(case.func)(
+                chat_id = chat_id,
+                state_point = state_point,
+                button = button,
+                text = text,
+                image = image,
+                callback_action = callback_action,
+                callback_variables = callback_variables
+            )
         end
     ))
 end 

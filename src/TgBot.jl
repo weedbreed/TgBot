@@ -34,7 +34,7 @@ function process_update(upd)
     state_point = StatePoint{Symbol(get_state(chat_id).point)}()
     button = Button{Symbol(rget(upd, [:message, :text]))}()
     text = rget(upd, [:message, :text])
-    textT = Text(!isnothing(text))()
+    textT = Letter(!isnothing(text))()
     # TODO: Deal with all image sizes
     image_sizes = rget(upd, [:message, :photo])
     image = isnothing(image_sizes) ? nothing : maximum(ps -> ps.width, image_sizes).file_id
@@ -53,8 +53,8 @@ function run_tgbot()
     @assert isfile(".env") "No .env environment file"
     dotenv()
 
-    @info "Running bot..."
     @info methods(process_update)
+    @info "Running bot..."
 
     run_bot() do msg
         @info "Incoming message:\t" chat_id=msg.message.chat.id text=rget(msg, [:message, :text])
