@@ -5,7 +5,6 @@ using Telegram, Telegram.API, Telegram.JSON3
 using ConfigEnv
 using Logging, LoggingExtras
 
-# push!(LOAD_PATH, joinpath(pwd(), "src"))
 include("Types.jl")
 using .Types
 include("TgBotMacro.jl")
@@ -16,8 +15,17 @@ struct State
     variables::Dict{String, Any}
 end
 
-function get_state(chat_id::Int64)::State 
-    error("get_state(chat_id) not implemented!")
+const STATES = Ref(Dict{Int64, State}())
+
+const init_state = State("START", Dict())
+
+function set_state(chat_id::Int64, state::State)
+    STATES[][chat_id] = state
+end
+
+function get_state(chat_id::Int64)::State
+    !haskey(STATES[], chat_id) && set_state(chat_id, init_state)
+    return STATES[][chat_id]
 end
 
 function rget(::Nothing, ::AbstractArray{Symbol, 1})
@@ -47,7 +55,7 @@ function process_update(upd:: JSON3.Object)
     callback_query_data = isnothing(callback_query_data_json) ? [nothing, Dict{String, Any}()] : JSON.Parser.parse(callback_query_data_json)
     @assert (isnothing(callback_query_data[1]) || callback_query_data[1] isa AbstractString) "Bad callback query data action:\t$callback_query_data"
     @assert callback_query_data[2] isa Dict{String, Any} "Bad callback query data variables:\t$callback_query_data"
-    callback_actionT = CallbackAction{callback_query_data[1]}()
+    callback_actionT = CallbackAction(callback_query_data[1])
     callback_variables = length(callback_query_data) > 1 ? callback_query_data[2] : Dict{String, Any}()
 
     @debug "Calling process_update with arguments:" state_pointT buttonT textT imageT callback_actionT chat_id callback_variables text image

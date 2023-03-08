@@ -4,7 +4,6 @@ export @tgbot, @tgfun
 using MacroTools
 using Logging
 
-# push!(LOAD_PATH, joinpath(pwd(), "src"))
 include("Types.jl")
 using .Types
 
