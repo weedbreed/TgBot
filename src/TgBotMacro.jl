@@ -44,7 +44,7 @@ function create_process_update()
             $(esc(:(::TgBot.Types.Letter{$(case.text)}))),
             $(esc(:(::TgBot.Types.Image{$(case.image)}))),
             callback_actionT::$(esc(create_type(:CallbackAction, case.callback_action)))
-            ; chat_id, callback_variables, text, image
+            ; chat_id, user, callback_variables, text, image
         )),
         quote
             function takeP(x)
@@ -56,10 +56,11 @@ function create_process_update()
             button = takeP(buttonT)
             callback_action = takeP(callback_actionT)
 
-            @debug "Calling function $(case.func) with arguments:" chat_id state_point button text image callback_action callback_variables
+            @debug "Calling function $(case.func) with arguments:" chat_id user state_point button text image callback_action callback_variables
 
             $(esc(case.func))(
                 chat_id=chat_id,
+                user=user,
                 state_point=state_point,
                 button=button,
                 text=text,
@@ -90,7 +91,7 @@ function tgbot_walk(ex)
     end
 
     if @capture(ex, cback:cback_)
-        global case.callback_action = cback_
+        global case.callback_action = cback
     end
 
     if @capture(ex, func:func_)
@@ -108,8 +109,8 @@ end
 macro tgfun(name, body)
     return Expr(
         :function,
-        :($(esc(name))(;chat_id, state_point, button, text, image, callback_action, callback_variables)),
-        body) 
+        :($(esc(name))(;chat_id, user, state_point, button, text, image, callback_action, callback_variables)),
+        esc(body)) 
 end
 
 end # module TgBotMacro
